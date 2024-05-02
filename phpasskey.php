@@ -96,7 +96,7 @@ function register() {
   
       echo 'OK';
     }
-    exif(1);
+    close(1);
   }
 }
 
