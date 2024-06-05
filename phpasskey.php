@@ -50,7 +50,7 @@ function login() {
     (rtrim($_SESSION['challenge'], '=') == $msfix(json_decode($clientDataJSON)->challenge)) or close(406, 'The challenge does not match');
 
     $pub = base64_encode($passkey['pub']);
-    $pub = str_replace('MIIBIjANBgkqhkiG9w0BAQsFAAOCAQ8A', 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A', $pub); // MS/Hello fix
+    $pub = preg_replace('/^'.preg_quote('MIIBIjANBgkqhkiG9w0BAQsFAAOCAQ8A').'/', 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A', $pub); // MS/Hello fix
     $pub = "\n-----BEGIN PUBLIC KEY-----\n".chunk_split($pub, 64, "\n")."-----END PUBLIC KEY-----\n";
 
     $challenge = $authenticatorData;
