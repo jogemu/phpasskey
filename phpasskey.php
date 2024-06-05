@@ -109,10 +109,14 @@ function close($status=null, $message=null) {
 
 function phpasskey_js() { echo "<script>
   function cred(fn) {
-    const callGet = (k, o) => (k.startsWith('get') && typeof o[k] === 'function') ? [k.charAt(3).toLowerCase() + k.slice(4), o[k]()] : [k, o[k]];
-    function* iter(o) { for(let k in o) { yield callGet(k, o); } };
-    const clone = o => Object.fromEntries(iter(o));
-    const replacer = (_, v) => (v instanceof ArrayBuffer) ? btoa(String.fromCharCode(...new Uint8Array(v))) : (typeof v === 'object') ? clone(v) : v;
+    ArrayBuffer.prototype.toJSON = function() { return btoa(String.fromCharCode(...new Uint8Array(this))) }
+    PublicKeyCredential.prototype.toJSON = function() {
+      function* iter(o) { for(let k in o) {  // only way that lists clientDataJSON
+        yield (k.startsWith('get') && (o[k] instanceof Function)) ? [k.charAt(3).toLowerCase() + k.slice(4), o[k]()] : [k, o[k]]
+      } }
+      let toJSON = o => Object.fromEntries(iter(o))
+      return Object.assign(toJSON(this), { response: toJSON(this.response) })
+    }
   
     const err = (s) => {throw new Error('Error ' + r.status)};
     const fetchOK = (...a) => fetch(...a).then(r => r.ok ? r : err('Error ' + r.status));
@@ -123,7 +127,7 @@ function phpasskey_js() { echo "<script>
       o.publicKey.challenge = a2b(o.publicKey.challenge);
       if(o.publicKey.user) o.publicKey.user.id = a2b(o.publicKey.user.id);
       return fn(o);
-    }).then(pkc => fetch(window.location.href, {method: 'POST', body: JSON.stringify(pkc, replacer)})).then(() => location.reload()).catch(e => alert(e));
+    }).then(pkc => fetch(window.location.href, {method: 'POST', body: JSON.stringify(pkc)})).then(() => location.reload()).catch(e => alert(e));
   }
   const login = () => cred(o => navigator.credentials.get(o));
   const register = () => cred(o => navigator.credentials.create(o));
