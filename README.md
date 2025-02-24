@@ -4,7 +4,7 @@ Concise passkey authentication for php with mysql. Only uses cookies once the lo
 
 ## Setup
 
-Adjust the mysql credentials at the beginning of the file and create the following table.
+Create the following table.
 
 ```sql
 CREATE TABLE `passkeys` (
@@ -16,16 +16,32 @@ CREATE TABLE `passkeys` (
 )
 ```
 
-Once you modified the login page and domain and username logic to your liking (marked with TODO) any php file can require a login by starting with:
+Add this to the top of any php file that requires login. You can customize the login screen to your liking where the login button is echoed.
 
 ```php
 <?php
-require('phpasskey.php`);
-login();
+
+$mySQLi = new mysqli('server', 'user', 'password', 'database'); // TODO
+(!$mySQLi->connect_error) or exit('mySQLi unable to connect');
+$mySQLi->set_charset('utf8mb4');
+register_shutdown_function(fn() => $mySQLi->close());
+
+(require 'phpasskey.php')(function() {
+  // Only continues if not already logged in.
+  echo '<button onclick="login()">Login</button>';
+}, $mySQLi, register: 'passkey label');
 // Only continues if the user is logged in.
+echo '<button onclick="register()">Register</button>';
 ```
 
-The option to register a key can be enabled by continuing with `register()`, outputting `phpasskey_js()` in the `head` and adding a button that calls the JavaScript function `register()`. Close the MYSQL connection and end execution with `close()`.
+If the above is put in a php file you can require it in other files to reuse a login screen. Passkey registration is only possible if the user is logged in and the passkey label is not omitted. You may login by setting the following session variables.
+
+```php
+<?php
+session_start();
+$_SESSION['user'] = 1;
+$_SESSION['name'] = 'John Doe';
+```
 
 ## Notes
 
