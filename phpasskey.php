@@ -7,6 +7,7 @@ session_set_cookie_params([
 ]);
 
 return function($form, $mySQLi, $challenge_bytes=64, $register=false) {
+  if(!$form) return;
   $a = fn(...$v) => $v;
 
   $respond = function($message=null, $status=null) {
@@ -88,7 +89,7 @@ const register = () => cred(o => navigator.credentials.create(o));
 
   $post = $input(fn() => $a(publicKey: $a(
     challenge: $_SESSION['challenge'] = base64_encode(random_bytes($challenge_bytes))
-  ))) or $respond($form);
+  ))) or $respond($form, 401);
 
   $id = base64_encode($b64_dec($post->id));
   $authenticatorData = $b64_dec($post->response->authenticatorData);
